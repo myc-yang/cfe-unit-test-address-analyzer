@@ -424,7 +424,7 @@ int32 CFE_ES_LoadModule(CFE_ResourceId_t ParentResourceId, const char *ModuleNam
                  * Keeping symbols local/private may help ensure this module is unloadable
                  * in the future, depending on underlying OS/loader implementation.
                  */
-                LoadFlags |= OS_MODULE_FLAG_LOCAL_SYMBOLS;
+                LoadFlags |= OS_MODULE_FLAG_GLOBAL_SYMBOLS; // OS_MODULE_FLAG_LOCAL_SYMBOLS;
                 break;
             case CFE_ES_LIBID_BASE:
                 /*
