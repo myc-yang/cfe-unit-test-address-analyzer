@@ -1,22 +1,20 @@
-/*
-**  GSC-18128-1, "Core Flight Executive Version 6.7"
-**
-**  Copyright (c) 2006-2019 United States Government as represented by
-**  the Administrator of the National Aeronautics and Space Administration.
-**  All Rights Reserved.
-**
-**  Licensed under the Apache License, Version 2.0 (the "License");
-**  you may not use this file except in compliance with the License.
-**  You may obtain a copy of the License at
-**
-**    http://www.apache.org/licenses/LICENSE-2.0
-**
-**  Unless required by applicable law or agreed to in writing, software
-**  distributed under the License is distributed on an "AS IS" BASIS,
-**  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-**  See the License for the specific language governing permissions and
-**  limitations under the License.
-*/
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ *
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /******************************************************************************
 ** File: cfe_sb_api.c
@@ -79,8 +77,6 @@ typedef struct
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_PipeId_ToIndex
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -91,8 +87,6 @@ CFE_Status_t CFE_SB_PipeId_ToIndex(CFE_SB_PipeId_t PipeID, uint32 *Idx)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_CreatePipe
  *
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -209,7 +203,7 @@ CFE_Status_t CFE_SB_CreatePipe(CFE_SB_PipeId_t *PipeIdPtr, uint16 Depth, const c
         if (CFE_SB_Global.StatTlmMsg.Payload.PipesInUse > CFE_SB_Global.StatTlmMsg.Payload.PeakPipesInUse)
         {
             CFE_SB_Global.StatTlmMsg.Payload.PeakPipesInUse = CFE_SB_Global.StatTlmMsg.Payload.PipesInUse;
-        } /* end if */
+        }
     }
     else
     {
@@ -279,8 +273,6 @@ CFE_Status_t CFE_SB_CreatePipe(CFE_SB_PipeId_t *PipeIdPtr, uint16 Depth, const c
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_DeletePipe
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -300,8 +292,6 @@ CFE_Status_t CFE_SB_DeletePipe(CFE_SB_PipeId_t PipeId)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_DeletePipeWithAppId
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -316,8 +306,6 @@ int32 CFE_SB_DeletePipeWithAppId(CFE_SB_PipeId_t PipeId, CFE_ES_AppId_t AppId)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_RemovePipeFromRoute
  *
  * Internal helper routine only, not part of API.
  *
@@ -340,8 +328,6 @@ void CFE_SB_RemovePipeFromRoute(CFE_SBR_RouteId_t RouteId, void *ArgPtr)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_DeletePipeFull
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -490,8 +476,6 @@ int32 CFE_SB_DeletePipeFull(CFE_SB_PipeId_t PipeId, CFE_ES_AppId_t AppId)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_SetPipeOpts
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -579,8 +563,6 @@ CFE_Status_t CFE_SB_SetPipeOpts(CFE_SB_PipeId_t PipeId, uint8 Opts)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_GetPipeOpts
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -655,8 +637,6 @@ CFE_Status_t CFE_SB_GetPipeOpts(CFE_SB_PipeId_t PipeId, uint8 *OptsPtr)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_GetPipeName
  *
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -751,8 +731,6 @@ CFE_Status_t CFE_SB_GetPipeName(char *PipeNameBuf, size_t PipeNameSize, CFE_SB_P
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_GetPipeIdByName
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -811,7 +789,7 @@ CFE_Status_t CFE_SB_GetPipeIdByName(CFE_SB_PipeId_t *PipeIdPtr, const char *Pipe
                 /* grab the ID before we release the lock */
                 *PipeIdPtr = CFE_SB_PipeDescGetID(PipeDscPtr);
                 break;
-            } /* end if */
+            }
 
             --Idx;
             ++PipeDscPtr;
@@ -857,8 +835,6 @@ CFE_Status_t CFE_SB_GetPipeIdByName(CFE_SB_PipeId_t *PipeIdPtr, const char *Pipe
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_SubscribeEx
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -869,8 +845,6 @@ CFE_Status_t CFE_SB_SubscribeEx(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId, CF
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_SubscribeLocal
  *
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -883,8 +857,6 @@ CFE_Status_t CFE_SB_SubscribeLocal(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId,
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_Subscribe
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -896,8 +868,6 @@ CFE_Status_t CFE_SB_Subscribe(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_SubscribeFull
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -974,7 +944,7 @@ int32 CFE_SB_SubscribeFull(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId, CFE_SB_
                 if (CFE_SB_Global.StatTlmMsg.Payload.MsgIdsInUse > CFE_SB_Global.StatTlmMsg.Payload.PeakMsgIdsInUse)
                 {
                     CFE_SB_Global.StatTlmMsg.Payload.PeakMsgIdsInUse = CFE_SB_Global.StatTlmMsg.Payload.MsgIdsInUse;
-                } /* end if */
+                }
             }
         }
     }
@@ -1138,8 +1108,6 @@ int32 CFE_SB_SubscribeFull(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId, CFE_SB_
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_Unsubscribe
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -1158,8 +1126,6 @@ CFE_Status_t CFE_SB_Unsubscribe(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_UnsubscribeLocal
  *
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -1180,8 +1146,6 @@ CFE_Status_t CFE_SB_UnsubscribeLocal(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeI
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_UnsubscribeWithAppId
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -1196,8 +1160,6 @@ int32 CFE_SB_UnsubscribeWithAppId(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId, 
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_UnsubscribeFull
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -1269,7 +1231,7 @@ int32 CFE_SB_UnsubscribeFull(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId, uint8
                 PendingEventID = CFE_SB_UNSUB_NO_SUBS_EID;
             }
         }
-    } /* end if */
+    }
 
     CFE_SB_UnlockSharedData(__func__, __LINE__);
 
@@ -1321,13 +1283,11 @@ int32 CFE_SB_UnsubscribeFull(CFE_SB_MsgId_t MsgId, CFE_SB_PipeId_t PipeId, uint8
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_TransmitMsg
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-CFE_Status_t CFE_SB_TransmitMsg(const CFE_MSG_Message_t *MsgPtr, bool IncrementSequenceCount)
+CFE_Status_t CFE_SB_TransmitMsg(const CFE_MSG_Message_t *MsgPtr, bool UpdateHeader)
 {
     int32             Status;
     CFE_MSG_Size_t    Size  = 0;
@@ -1387,9 +1347,9 @@ CFE_Status_t CFE_SB_TransmitMsg(const CFE_MSG_Message_t *MsgPtr, bool IncrementS
     {
         /* Copy actual message content into buffer and set its metadata */
         memcpy(&BufDscPtr->Content, MsgPtr, Size);
-        BufDscPtr->MsgId        = MsgId;
-        BufDscPtr->ContentSize  = Size;
-        BufDscPtr->AutoSequence = IncrementSequenceCount;
+        BufDscPtr->MsgId       = MsgId;
+        BufDscPtr->ContentSize = Size;
+        BufDscPtr->NeedsUpdate = UpdateHeader;
         CFE_MSG_GetType(MsgPtr, &BufDscPtr->ContentType);
 
         /*
@@ -1427,8 +1387,6 @@ CFE_Status_t CFE_SB_TransmitMsg(const CFE_MSG_Message_t *MsgPtr, bool IncrementS
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_TransmitMsgValidate
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -1473,7 +1431,7 @@ int32 CFE_SB_TransmitMsgValidate(const CFE_MSG_Message_t *MsgPtr, CFE_SB_MsgId_t
         {
             PendingEventID = CFE_SB_MSG_TOO_BIG_EID;
             Status         = CFE_SB_MSG_TOO_BIG;
-        } /* end if */
+        }
     }
 
     if (Status == CFE_SUCCESS)
@@ -1503,24 +1461,42 @@ int32 CFE_SB_TransmitMsgValidate(const CFE_MSG_Message_t *MsgPtr, CFE_SB_MsgId_t
         switch (PendingEventID)
         {
             case CFE_SB_SEND_BAD_ARG_EID:
-                CFE_EVS_SendEventWithAppID(CFE_SB_SEND_BAD_ARG_EID, CFE_EVS_EventType_ERROR, CFE_SB_Global.AppId,
-                                           "Send Err:Bad input argument,Arg 0x%lx,App %s", (unsigned long)MsgPtr,
-                                           CFE_SB_GetAppTskName(TskId, FullName));
+                if (CFE_SB_RequestToSendEvent(TskId, CFE_SB_SEND_BAD_ARG_EID_BIT) == CFE_SB_GRANTED)
+                {
+                    CFE_EVS_SendEventWithAppID(CFE_SB_SEND_BAD_ARG_EID, CFE_EVS_EventType_ERROR, CFE_SB_Global.AppId,
+                                               "Send Err:Bad input argument,Arg 0x%lx,App %s", (unsigned long)MsgPtr,
+                                               CFE_SB_GetAppTskName(TskId, FullName));
+
+                    /* clear the bit so the task may send this event again */
+                    CFE_SB_FinishSendEvent(TskId, CFE_SB_SEND_BAD_ARG_EID_BIT);
+                }
                 break;
 
             case CFE_SB_SEND_INV_MSGID_EID:
-                CFE_EVS_SendEventWithAppID(CFE_SB_SEND_INV_MSGID_EID, CFE_EVS_EventType_ERROR, CFE_SB_Global.AppId,
-                                           "Send Err:Invalid MsgId(0x%x)in msg,App %s",
-                                           (unsigned int)CFE_SB_MsgIdToValue(*MsgIdPtr),
-                                           CFE_SB_GetAppTskName(TskId, FullName));
+                if (CFE_SB_RequestToSendEvent(TskId, CFE_SB_SEND_INV_MSGID_EID_BIT) == CFE_SB_GRANTED)
+                {
+                    CFE_EVS_SendEventWithAppID(CFE_SB_SEND_INV_MSGID_EID, CFE_EVS_EventType_ERROR, CFE_SB_Global.AppId,
+                                               "Send Err:Invalid MsgId(0x%x)in msg,App %s",
+                                               (unsigned int)CFE_SB_MsgIdToValue(*MsgIdPtr),
+                                               CFE_SB_GetAppTskName(TskId, FullName));
+
+                    /* clear the bit so the task may send this event again */
+                    CFE_SB_FinishSendEvent(TskId, CFE_SB_SEND_INV_MSGID_EID_BIT);
+                }
                 break;
 
             case CFE_SB_MSG_TOO_BIG_EID:
-                CFE_EVS_SendEventWithAppID(CFE_SB_MSG_TOO_BIG_EID, CFE_EVS_EventType_ERROR, CFE_SB_Global.AppId,
-                                           "Send Err:Msg Too Big MsgId=0x%x,app=%s,size=%d,MaxSz=%d",
-                                           (unsigned int)CFE_SB_MsgIdToValue(*MsgIdPtr),
-                                           CFE_SB_GetAppTskName(TskId, FullName), (int)*SizePtr,
-                                           CFE_MISSION_SB_MAX_SB_MSG_SIZE);
+                if (CFE_SB_RequestToSendEvent(TskId, CFE_SB_MSG_TOO_BIG_EID_BIT) == CFE_SB_GRANTED)
+                {
+                    CFE_EVS_SendEventWithAppID(CFE_SB_MSG_TOO_BIG_EID, CFE_EVS_EventType_ERROR, CFE_SB_Global.AppId,
+                                               "Send Err:Msg Too Big MsgId=0x%x,app=%s,size=%d,MaxSz=%d",
+                                               (unsigned int)CFE_SB_MsgIdToValue(*MsgIdPtr),
+                                               CFE_SB_GetAppTskName(TskId, FullName), (int)*SizePtr,
+                                               CFE_MISSION_SB_MAX_SB_MSG_SIZE);
+
+                    /* clear the bit so the task may send this event again */
+                    CFE_SB_FinishSendEvent(TskId, CFE_SB_MSG_TOO_BIG_EID_BIT);
+                }
                 break;
 
             case CFE_SB_SEND_NO_SUBS_EID:
@@ -1534,18 +1510,15 @@ int32 CFE_SB_TransmitMsgValidate(const CFE_MSG_Message_t *MsgPtr, CFE_SB_MsgId_t
 
                     /* clear the bit so the task may send this event again */
                     CFE_SB_FinishSendEvent(TskId, CFE_SB_SEND_NO_SUBS_EID_BIT);
-                } /* end if */
+                }
                 break;
         }
-
-    } /* end if */
+    }
 
     return Status;
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_BroadcastBufferToRoute
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -1578,13 +1551,15 @@ void CFE_SB_BroadcastBufferToRoute(CFE_SB_BufferD_t *BufDscPtr, CFE_SBR_RouteId_
     if (CFE_SBR_IsValidRouteId(RouteId))
     {
         /* Set the seq count if requested (while locked) before actually sending */
-        /* For some reason this is only done for TLM types (historical, TBD) */
-        if (BufDscPtr->AutoSequence && BufDscPtr->ContentType == CFE_MSG_Type_Tlm)
+        if (BufDscPtr->NeedsUpdate)
         {
             CFE_SBR_IncrementSequenceCounter(RouteId);
 
-            /* Write the sequence into the message header itself (overwrites whatever was there) */
-            CFE_MSG_SetSequenceCount(&BufDscPtr->Content.Msg, CFE_SBR_GetSequenceCounter(RouteId));
+            /* Update all MSG headers based on the current sequence */
+            CFE_MSG_UpdateHeader(&BufDscPtr->Content.Msg, CFE_SBR_GetSequenceCounter(RouteId));
+
+            /* Clear the flag, just in case */
+            BufDscPtr->NeedsUpdate = false;
         }
 
         /* Send the packet to all destinations  */
@@ -1608,7 +1583,7 @@ void CFE_SB_BroadcastBufferToRoute(CFE_SB_BufferD_t *BufDscPtr, CFE_SBR_RouteId_
                 CFE_RESOURCEID_TEST_EQUAL(PipeDscPtr->AppId, AppId))
             {
                 continue;
-            } /* end if */
+            }
 
             /* if Msg limit exceeded, log event, increment counter */
             /* and go to next destination */
@@ -1621,7 +1596,7 @@ void CFE_SB_BroadcastBufferToRoute(CFE_SB_BufferD_t *BufDscPtr, CFE_SBR_RouteId_
                 PipeDscPtr->SendErrors++;
 
                 continue;
-            } /* end if */
+            }
 
             /*
             ** Write the buffer descriptor to the queue of the pipe.  If the write
@@ -1642,22 +1617,22 @@ void CFE_SB_BroadcastBufferToRoute(CFE_SB_BufferD_t *BufDscPtr, CFE_SBR_RouteId_
                     PipeDscPtr->PeakQueueDepth = PipeDscPtr->CurrentQueueDepth;
                 }
             }
-            else if (OsStatus == OS_QUEUE_FULL)
-            {
-                SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].PipeId  = DestPtr->PipeId;
-                SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].EventId = CFE_SB_Q_FULL_ERR_EID;
-                SBSndErr.EvtsToSnd++;
-                CFE_SB_Global.HKTlmMsg.Payload.PipeOverflowErrorCounter++;
-                PipeDscPtr->SendErrors++;
-            }
             else
             {
-                /* Unexpected error while writing to queue. */
-                SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].PipeId   = DestPtr->PipeId;
-                SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].EventId  = CFE_SB_Q_WR_ERR_EID;
-                SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].OsStatus = OsStatus;
+                SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].PipeId = DestPtr->PipeId;
+                if (OsStatus == OS_QUEUE_FULL)
+                {
+                    SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].EventId = CFE_SB_Q_FULL_ERR_EID;
+                    CFE_SB_Global.HKTlmMsg.Payload.PipeOverflowErrorCounter++;
+                }
+                else
+                {
+                    /* Unexpected error while writing to queue. */
+                    SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].EventId  = CFE_SB_Q_WR_ERR_EID;
+                    SBSndErr.EvtBuf[SBSndErr.EvtsToSnd].OsStatus = OsStatus;
+                    CFE_SB_Global.HKTlmMsg.Payload.InternalErrorCounter++;
+                }
                 SBSndErr.EvtsToSnd++;
-                CFE_SB_Global.HKTlmMsg.Payload.InternalErrorCounter++;
                 PipeDscPtr->SendErrors++;
             } /*end if */
 
@@ -1705,11 +1680,9 @@ void CFE_SB_BroadcastBufferToRoute(CFE_SB_BufferD_t *BufDscPtr, CFE_SBR_RouteId_
     {
         if (SBSndErr.EvtBuf[i].EventId == CFE_SB_MSGID_LIM_ERR_EID)
         {
-
             /* Determine if event can be sent without causing recursive event problem */
             if (CFE_SB_RequestToSendEvent(TskId, CFE_SB_MSGID_LIM_ERR_EID_BIT) == CFE_SB_GRANTED)
             {
-
                 CFE_SB_GetPipeName(PipeName, sizeof(PipeName), SBSndErr.EvtBuf[i].PipeId);
 
                 CFE_ES_PerfLogEntry(CFE_MISSION_SB_MSG_LIM_PERF_ID);
@@ -1722,15 +1695,13 @@ void CFE_SB_BroadcastBufferToRoute(CFE_SB_BufferD_t *BufDscPtr, CFE_SBR_RouteId_
 
                 /* clear the bit so the task may send this event again */
                 CFE_SB_FinishSendEvent(TskId, CFE_SB_MSGID_LIM_ERR_EID_BIT);
-            } /* end if */
+            }
         }
         else if (SBSndErr.EvtBuf[i].EventId == CFE_SB_Q_FULL_ERR_EID)
         {
-
             /* Determine if event can be sent without causing recursive event problem */
             if (CFE_SB_RequestToSendEvent(TskId, CFE_SB_Q_FULL_ERR_EID_BIT) == CFE_SB_GRANTED)
             {
-
                 CFE_SB_GetPipeName(PipeName, sizeof(PipeName), SBSndErr.EvtBuf[i].PipeId);
 
                 CFE_ES_PerfLogEntry(CFE_MISSION_SB_PIPE_OFLOW_PERF_ID);
@@ -1743,15 +1714,13 @@ void CFE_SB_BroadcastBufferToRoute(CFE_SB_BufferD_t *BufDscPtr, CFE_SBR_RouteId_
 
                 /* clear the bit so the task may send this event again */
                 CFE_SB_FinishSendEvent(TskId, CFE_SB_Q_FULL_ERR_EID_BIT);
-            } /* end if */
+            }
         }
         else
         {
-
             /* Determine if event can be sent without causing recursive event problem */
             if (CFE_SB_RequestToSendEvent(TskId, CFE_SB_Q_WR_ERR_EID_BIT) == CFE_SB_GRANTED)
             {
-
                 CFE_SB_GetPipeName(PipeName, sizeof(PipeName), SBSndErr.EvtBuf[i].PipeId);
 
                 CFE_EVS_SendEventWithAppID(CFE_SB_Q_WR_ERR_EID, CFE_EVS_EventType_ERROR, CFE_SB_Global.AppId,
@@ -1761,15 +1730,12 @@ void CFE_SB_BroadcastBufferToRoute(CFE_SB_BufferD_t *BufDscPtr, CFE_SBR_RouteId_
 
                 /* clear the bit so the task may send this event again */
                 CFE_SB_FinishSendEvent(TskId, CFE_SB_Q_WR_ERR_EID_BIT);
-            } /* end if */
-
-        } /* end if */
+            }
+        }
     }
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_ReceiveBuffer
  *
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -1972,8 +1938,8 @@ CFE_Status_t CFE_SB_ReceiveBuffer(CFE_SB_Buffer_t **BufPtr, CFE_SB_PipeId_t Pipe
         CFE_SB_DecrBufUseCnt(BufDscPtr);
     }
 
-    /* Before unlocking, check the PendingEventID and increment relevant error counter */
-    if (Status != CFE_SUCCESS)
+    /* Before unlocking, increment relevant error counter if needed */
+    if (Status != CFE_SUCCESS && Status != CFE_SB_NO_MESSAGE && Status != CFE_SB_TIME_OUT)
     {
         if (PendingEventID == CFE_SB_RCV_BAD_ARG_EID || PendingEventID == CFE_SB_BAD_PIPEID_EID)
         {
@@ -2025,8 +1991,6 @@ CFE_Status_t CFE_SB_ReceiveBuffer(CFE_SB_Buffer_t **BufPtr, CFE_SB_PipeId_t Pipe
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_SB_AllocateMessageBuffer
  *
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -2086,8 +2050,6 @@ CFE_SB_Buffer_t *CFE_SB_AllocateMessageBuffer(size_t MsgSize)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_ZeroCopyBufferValidate
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -2125,8 +2087,6 @@ int32 CFE_SB_ZeroCopyBufferValidate(CFE_SB_Buffer_t *BufPtr, CFE_SB_BufferD_t **
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_ReleaseMessageBuffer
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -2154,13 +2114,11 @@ CFE_Status_t CFE_SB_ReleaseMessageBuffer(CFE_SB_Buffer_t *BufPtr)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_SB_TransmitBuffer
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-CFE_Status_t CFE_SB_TransmitBuffer(CFE_SB_Buffer_t *BufPtr, bool IncrementSequenceCount)
+CFE_Status_t CFE_SB_TransmitBuffer(CFE_SB_Buffer_t *BufPtr, bool UpdateHeader)
 {
     int32             Status;
     CFE_SB_BufferD_t *BufDscPtr;
@@ -2185,7 +2143,7 @@ CFE_Status_t CFE_SB_TransmitBuffer(CFE_SB_Buffer_t *BufPtr, bool IncrementSequen
          */
         if (Status == CFE_SUCCESS)
         {
-            BufDscPtr->AutoSequence = IncrementSequenceCount;
+            BufDscPtr->NeedsUpdate = UpdateHeader;
             CFE_MSG_GetType(&BufPtr->Msg, &BufDscPtr->ContentType);
 
             /* Now broadcast the message, which consumes the buffer */

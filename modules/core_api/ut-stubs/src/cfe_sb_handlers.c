@@ -1,22 +1,20 @@
-/*
-**  GSC-18128-1, "Core Flight Executive Version 6.7"
-**
-**  Copyright (c) 2006-2019 United States Government as represented by
-**  the Administrator of the National Aeronautics and Space Administration.
-**  All Rights Reserved.
-**
-**  Licensed under the Apache License, Version 2.0 (the "License");
-**  you may not use this file except in compliance with the License.
-**  You may obtain a copy of the License at
-**
-**    http://www.apache.org/licenses/LICENSE-2.0
-**
-**  Unless required by applicable law or agreed to in writing, software
-**  distributed under the License is distributed on an "AS IS" BASIS,
-**  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-**  See the License for the specific language governing permissions and
-**  limitations under the License.
-*/
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ *
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /*
 ** File: ut_sb_stubs.c
@@ -45,17 +43,16 @@ typedef struct
     uint32             TotalLength;
     uint16             CommandCode;
     CFE_TIME_SysTime_t TimeStamp;
-
 } CFE_SB_StubMsg_MetaData_t;
 
 static CFE_SB_StubMsg_MetaData_t *CFE_SB_StubMsg_GetMetaData(const CFE_MSG_Message_t *MsgPtr)
 {
-    CFE_SB_StubMsg_MetaData_t *MetaPtr;
-    CFE_SB_StubMsg_MetaData_t  DefaultMeta;
-    size_t                     MetaSize;
-    UT_EntryKey_t              MsgKey = (UT_EntryKey_t)MsgPtr;
+    void *                    MetaPtr;
+    CFE_SB_StubMsg_MetaData_t DefaultMeta;
+    size_t                    MetaSize;
+    UT_EntryKey_t             MsgKey = (UT_EntryKey_t)MsgPtr;
 
-    UT_GetDataBuffer(MsgKey, (void **)&MetaPtr, &MetaSize, NULL);
+    UT_GetDataBuffer(MsgKey, &MetaPtr, &MetaSize, NULL);
     if (MetaPtr == NULL || MetaSize != sizeof(DefaultMeta))
     {
         memset(&DefaultMeta, 0, sizeof(DefaultMeta));
@@ -64,7 +61,7 @@ static CFE_SB_StubMsg_MetaData_t *CFE_SB_StubMsg_GetMetaData(const CFE_MSG_Messa
         UT_SetDataBuffer(MsgKey, &DefaultMeta, sizeof(DefaultMeta), true);
 
         /* Because "allocate copy" is true above, this gets a pointer to the copy */
-        UT_GetDataBuffer(MsgKey, (void **)&MetaPtr, &MetaSize, NULL);
+        UT_GetDataBuffer(MsgKey, &MetaPtr, &MetaSize, NULL);
     }
 
     return MetaPtr;
@@ -123,6 +120,7 @@ void UT_DefaultHandler_CFE_SB_GetPipeName(void *UserObj, UT_EntryKey_t FuncKey, 
 
     size_t      UserBuffSize;
     size_t      BuffPosition;
+    void *      TempBuff;
     const char *NameBuff;
     int32       status;
 
@@ -130,11 +128,15 @@ void UT_DefaultHandler_CFE_SB_GetPipeName(void *UserObj, UT_EntryKey_t FuncKey, 
 
     if (status >= 0 && PipeNameSize > 0)
     {
-        UT_GetDataBuffer(UT_KEY(CFE_SB_GetPipeName), (void **)&NameBuff, &UserBuffSize, &BuffPosition);
-        if (NameBuff == NULL || UserBuffSize == 0)
+        UT_GetDataBuffer(UT_KEY(CFE_SB_GetPipeName), &TempBuff, &UserBuffSize, &BuffPosition);
+        if (TempBuff == NULL || UserBuffSize == 0)
         {
             NameBuff     = "UT";
             UserBuffSize = 2;
+        }
+        else
+        {
+            NameBuff = TempBuff;
         }
 
         if (UserBuffSize < PipeNameSize)
@@ -253,7 +255,6 @@ void UT_DefaultHandler_CFE_SB_TransmitBuffer(void *UserObj, UT_EntryKey_t FuncKe
  *------------------------------------------------------------*/
 void UT_DefaultHandler_CFE_SB_MessageStringGet(void *UserObj, UT_EntryKey_t FuncKey, const UT_StubContext_t *Context)
 {
-
     char *      DestStringPtr   = UT_Hook_GetArgValueByName(Context, "DestStringPtr", char *);
     const char *SourceStringPtr = UT_Hook_GetArgValueByName(Context, "SourceStringPtr", const char *);
     const char *DefaultString   = UT_Hook_GetArgValueByName(Context, "DefaultString", const char *);
@@ -300,7 +301,6 @@ void UT_DefaultHandler_CFE_SB_MessageStringGet(void *UserObj, UT_EntryKey_t Func
  *------------------------------------------------------------*/
 void UT_DefaultHandler_CFE_SB_MessageStringSet(void *UserObj, UT_EntryKey_t FuncKey, const UT_StubContext_t *Context)
 {
-
     char *      DestStringPtr   = UT_Hook_GetArgValueByName(Context, "DestStringPtr", char *);
     const char *SourceStringPtr = UT_Hook_GetArgValueByName(Context, "SourceStringPtr", const char *);
     size_t      DestMaxSize     = UT_Hook_GetArgValueByName(Context, "DestMaxSize", size_t);
@@ -393,12 +393,19 @@ void UT_DefaultHandler_CFE_SB_GetUserDataLength(void *UserObj, UT_EntryKey_t Fun
  *------------------------------------------------------------*/
 void UT_DefaultHandler_CFE_SB_IsValidMsgId(void *UserObj, UT_EntryKey_t FuncKey, const UT_StubContext_t *Context)
 {
-    int32 status;
-    bool  return_value;
+    int32          status;
+    bool           return_value;
+    CFE_SB_MsgId_t MsgId = UT_Hook_GetArgValueByName(Context, "MsgId", CFE_SB_MsgId_t);
 
-    UT_Stub_GetInt32StatusCode(Context, &status);
-
-    return_value = status;
+    if (UT_Stub_GetInt32StatusCode(Context, &status))
+    {
+        return_value = status;
+    }
+    else
+    {
+        /* The only invalid value UT's should be using is CFE_SB_INVALID_MSG_ID */
+        return_value = !CFE_SB_MsgId_Equal(MsgId, CFE_SB_INVALID_MSG_ID);
+    }
 
     UT_Stub_SetReturnValue(FuncKey, return_value);
 }

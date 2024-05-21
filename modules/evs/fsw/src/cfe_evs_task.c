@@ -1,22 +1,20 @@
-/*
-**  GSC-18128-1, "Core Flight Executive Version 6.7"
-**
-**  Copyright (c) 2006-2019 United States Government as represented by
-**  the Administrator of the National Aeronautics and Space Administration.
-**  All Rights Reserved.
-**
-**  Licensed under the Apache License, Version 2.0 (the "License");
-**  you may not use this file except in compliance with the License.
-**  You may obtain a copy of the License at
-**
-**    http://www.apache.org/licenses/LICENSE-2.0
-**
-**  Unless required by applicable law or agreed to in writing, software
-**  distributed under the License is distributed on an "AS IS" BASIS,
-**  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-**  See the License for the specific language governing permissions and
-**  limitations under the License.
-*/
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ *
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /*
 **  File: cfe_evs_task.c
@@ -54,8 +52,6 @@ bool CFE_EVS_VerifyCmdLength(CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength);
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_EarlyInit
- *
  * Implemented per public API
  * See description in header file for argument/return detail
  *
@@ -72,13 +68,15 @@ int32 CFE_EVS_EarlyInit(void)
     memset(&CFE_EVS_Global, 0, sizeof(CFE_EVS_Global));
 
     /* Initialize housekeeping packet */
-    CFE_MSG_Init(&CFE_EVS_Global.EVS_TlmPkt.TlmHeader.Msg, CFE_SB_ValueToMsgId(CFE_EVS_HK_TLM_MID),
+    CFE_MSG_Init(CFE_MSG_PTR(CFE_EVS_Global.EVS_TlmPkt.TelemetryHeader), CFE_SB_ValueToMsgId(CFE_EVS_HK_TLM_MID),
                  sizeof(CFE_EVS_Global.EVS_TlmPkt));
 
     /* Elements stored in the hk packet that have non-zero default values */
     CFE_EVS_Global.EVS_TlmPkt.Payload.MessageFormatMode = CFE_PLATFORM_EVS_DEFAULT_MSG_FORMAT_MODE;
     CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort        = CFE_PLATFORM_EVS_PORT_DEFAULT;
     CFE_EVS_Global.EVS_TlmPkt.Payload.LogMode           = CFE_PLATFORM_EVS_DEFAULT_LOG_MODE;
+
+    CFE_EVS_Global.EVS_EventBurstMax = CFE_PLATFORM_EVS_MAX_APP_EVENT_BURST;
 
     /* Get a pointer to the CFE reset area from the BSP */
     PspStatus = CFE_PSP_GetResetArea(&resetAreaAddr, &resetAreaSize);
@@ -164,12 +162,10 @@ int32 CFE_EVS_EarlyInit(void)
         }
     }
 
-    return (Status);
+    return Status;
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_CleanUpApp
  *
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -191,12 +187,10 @@ int32 CFE_EVS_CleanUpApp(CFE_ES_AppId_t AppID)
         EVS_AppDataSetFree(AppDataPtr);
     }
 
-    return (Status);
+    return Status;
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_TaskMain
  *
  * Implemented per public API
  * See description in header file for argument/return detail
@@ -217,7 +211,7 @@ void CFE_EVS_TaskMain(void)
         CFE_ES_PerfLogExit(CFE_MISSION_EVS_MAIN_PERF_ID);
         /* Note: CFE_ES_ExitApp will not return */
         CFE_ES_ExitApp(CFE_ES_RunStatus_CORE_APP_INIT_ERROR);
-    } /* end if */
+    }
 
     /*
      * Wait for other apps to start.
@@ -248,7 +242,7 @@ void CFE_EVS_TaskMain(void)
         else
         {
             CFE_ES_WriteToSysLog("%s: Error reading cmd pipe,RC=0x%08X\n", __func__, (unsigned int)Status);
-        } /* end if */
+        }
 
     } /* end while */
 
@@ -257,8 +251,6 @@ void CFE_EVS_TaskMain(void)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_TaskInit
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -317,294 +309,6 @@ int32 CFE_EVS_TaskInit(void)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_ProcessCommandPacket
- *
- * Application-scope internal function
- * See description in header file for argument/return detail
- *
- *-----------------------------------------------------------------*/
-void CFE_EVS_ProcessCommandPacket(CFE_SB_Buffer_t *SBBufPtr)
-{
-    CFE_SB_MsgId_t MessageID = CFE_SB_INVALID_MSG_ID;
-
-    CFE_MSG_GetMsgId(&SBBufPtr->Msg, &MessageID);
-
-    /* Process all SB messages */
-    switch (CFE_SB_MsgIdToValue(MessageID))
-    {
-        case CFE_EVS_CMD_MID:
-            /* EVS task specific command */
-            CFE_EVS_ProcessGroundCommand(SBBufPtr, MessageID);
-            break;
-
-        case CFE_EVS_SEND_HK_MID:
-            /* Housekeeping request */
-            CFE_EVS_ReportHousekeepingCmd((CFE_MSG_CommandHeader_t *)SBBufPtr);
-            break;
-
-        default:
-            /* Unknown command -- should never occur */
-            CFE_EVS_Global.EVS_TlmPkt.Payload.CommandErrorCounter++;
-            EVS_SendEvent(CFE_EVS_ERR_MSGID_EID, CFE_EVS_EventType_ERROR, "Invalid command packet, Message ID = 0x%08X",
-                          (unsigned int)CFE_SB_MsgIdToValue(MessageID));
-            break;
-    }
-
-    return;
-}
-
-/*----------------------------------------------------------------
- *
- * Function: CFE_EVS_ProcessGroundCommand
- *
- * Internal helper routine only, not part of API.
- *
- * This function processes a command, verifying that it is valid and of
- *  proper length.
- *
- *-----------------------------------------------------------------*/
-void CFE_EVS_ProcessGroundCommand(CFE_SB_Buffer_t *SBBufPtr, CFE_SB_MsgId_t MsgId)
-{
-    /* status will get reset if it passes length check */
-    int32             Status  = CFE_STATUS_WRONG_MSG_LENGTH;
-    CFE_MSG_FcnCode_t FcnCode = 0;
-
-    CFE_MSG_GetFcnCode(&SBBufPtr->Msg, &FcnCode);
-
-    /* Process "known" EVS task ground commands */
-    switch (FcnCode)
-    {
-        case CFE_EVS_NOOP_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_NoopCmd_t)))
-            {
-                Status = CFE_EVS_NoopCmd((CFE_EVS_NoopCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_RESET_COUNTERS_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_ResetCountersCmd_t)))
-            {
-                Status = CFE_EVS_ResetCountersCmd((CFE_EVS_ResetCountersCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_ENABLE_EVENT_TYPE_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_EnableEventTypeCmd_t)))
-            {
-                Status = CFE_EVS_EnableEventTypeCmd((CFE_EVS_EnableEventTypeCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_DISABLE_EVENT_TYPE_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_DisableEventTypeCmd_t)))
-            {
-                Status = CFE_EVS_DisableEventTypeCmd((CFE_EVS_DisableEventTypeCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_SET_EVENT_FORMAT_MODE_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_SetEventFormatModeCmd_t)))
-            {
-                Status = CFE_EVS_SetEventFormatModeCmd((CFE_EVS_SetEventFormatModeCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_ENABLE_APP_EVENT_TYPE_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_EnableAppEventTypeCmd_t)))
-            {
-                Status = CFE_EVS_EnableAppEventTypeCmd((CFE_EVS_EnableAppEventTypeCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_DISABLE_APP_EVENT_TYPE_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_DisableAppEventTypeCmd_t)))
-            {
-                Status = CFE_EVS_DisableAppEventTypeCmd((CFE_EVS_DisableAppEventTypeCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_ENABLE_APP_EVENTS_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_EnableAppEventsCmd_t)))
-            {
-                Status = CFE_EVS_EnableAppEventsCmd((CFE_EVS_EnableAppEventsCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_DISABLE_APP_EVENTS_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_DisableAppEventsCmd_t)))
-            {
-                Status = CFE_EVS_DisableAppEventsCmd((CFE_EVS_DisableAppEventsCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_RESET_APP_COUNTER_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_ResetAppCounterCmd_t)))
-            {
-                Status = CFE_EVS_ResetAppCounterCmd((CFE_EVS_ResetAppCounterCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_SET_FILTER_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_SetFilterCmd_t)))
-            {
-                Status = CFE_EVS_SetFilterCmd((CFE_EVS_SetFilterCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_ENABLE_PORTS_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_EnablePortsCmd_t)))
-            {
-                Status = CFE_EVS_EnablePortsCmd((CFE_EVS_EnablePortsCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_DISABLE_PORTS_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_DisablePortsCmd_t)))
-            {
-                Status = CFE_EVS_DisablePortsCmd((CFE_EVS_DisablePortsCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_RESET_FILTER_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_ResetFilterCmd_t)))
-            {
-                Status = CFE_EVS_ResetFilterCmd((CFE_EVS_ResetFilterCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_RESET_ALL_FILTERS_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_ResetAllFiltersCmd_t)))
-            {
-                Status = CFE_EVS_ResetAllFiltersCmd((CFE_EVS_ResetAllFiltersCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_ADD_EVENT_FILTER_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_AddEventFilterCmd_t)))
-            {
-                Status = CFE_EVS_AddEventFilterCmd((CFE_EVS_AddEventFilterCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_DELETE_EVENT_FILTER_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_DeleteEventFilterCmd_t)))
-            {
-                Status = CFE_EVS_DeleteEventFilterCmd((CFE_EVS_DeleteEventFilterCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_WRITE_APP_DATA_FILE_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_WriteAppDataFileCmd_t)))
-            {
-                Status = CFE_EVS_WriteAppDataFileCmd((CFE_EVS_WriteAppDataFileCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_SET_LOG_MODE_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_SetLogModeCmd_t)))
-            {
-                Status = CFE_EVS_SetLogModeCmd((CFE_EVS_SetLogModeCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_CLEAR_LOG_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_ClearLogCmd_t)))
-            {
-                Status = CFE_EVS_ClearLogCmd((CFE_EVS_ClearLogCmd_t *)SBBufPtr);
-            }
-            break;
-
-        case CFE_EVS_WRITE_LOG_DATA_FILE_CC:
-
-            if (CFE_EVS_VerifyCmdLength(&SBBufPtr->Msg, sizeof(CFE_EVS_WriteLogDataFileCmd_t)))
-            {
-                Status = CFE_EVS_WriteLogDataFileCmd((CFE_EVS_WriteLogDataFileCmd_t *)SBBufPtr);
-            }
-            break;
-
-        /* default is a bad command code as it was not found above */
-        default:
-
-            EVS_SendEvent(CFE_EVS_ERR_CC_EID, CFE_EVS_EventType_ERROR, "Invalid command code -- ID = 0x%08x, CC = %u",
-                          (unsigned int)CFE_SB_MsgIdToValue(MsgId), (unsigned int)FcnCode);
-            Status = CFE_STATUS_BAD_COMMAND_CODE;
-
-            break;
-    }
-
-    if (Status == CFE_SUCCESS)
-    {
-        CFE_EVS_Global.EVS_TlmPkt.Payload.CommandCounter++;
-    }
-    else if (Status < 0) /* Negative values indicate errors */
-    {
-        CFE_EVS_Global.EVS_TlmPkt.Payload.CommandErrorCounter++;
-    }
-
-    return;
-}
-
-/*----------------------------------------------------------------
- *
- * Function: CFE_EVS_VerifyCmdLength
- *
- * Internal helper routine only, not part of API.
- *
- * This function validates the length of a command structure, and
- * generates an error event if is not the expected length.
- *
- *-----------------------------------------------------------------*/
-bool CFE_EVS_VerifyCmdLength(CFE_MSG_Message_t *MsgPtr, size_t ExpectedLength)
-{
-    bool              result       = true;
-    CFE_MSG_Size_t    ActualLength = 0;
-    CFE_MSG_FcnCode_t FcnCode      = 0;
-    CFE_SB_MsgId_t    MsgId        = CFE_SB_INVALID_MSG_ID;
-
-    CFE_MSG_GetSize(MsgPtr, &ActualLength);
-
-    /*
-    ** Verify the command packet length
-    */
-    if (ExpectedLength != ActualLength)
-    {
-        CFE_MSG_GetMsgId(MsgPtr, &MsgId);
-        CFE_MSG_GetFcnCode(MsgPtr, &FcnCode);
-
-        EVS_SendEvent(CFE_EVS_LEN_ERR_EID, CFE_EVS_EventType_ERROR,
-                      "Invalid msg length: ID = 0x%X,  CC = %u, Len = %u, Expected = %u",
-                      (unsigned int)CFE_SB_MsgIdToValue(MsgId), (unsigned int)FcnCode, (unsigned int)ActualLength,
-                      (unsigned int)ExpectedLength);
-        result = false;
-    }
-
-    return (result);
-}
-
-/*----------------------------------------------------------------
- *
- * Function: CFE_EVS_NoopCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -616,8 +320,6 @@ int32 CFE_EVS_NoopCmd(const CFE_EVS_NoopCmd_t *data)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_ClearLogCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -631,13 +333,11 @@ int32 CFE_EVS_ClearLogCmd(const CFE_EVS_ClearLogCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_ReportHousekeepingCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
  *-----------------------------------------------------------------*/
-int32 CFE_EVS_ReportHousekeepingCmd(const CFE_MSG_CommandHeader_t *data)
+int32 CFE_EVS_ReportHousekeepingCmd(const CFE_EVS_SendHkCmd_t *data)
 {
     uint32                i, j;
     EVS_AppData_t *       AppDataPtr;
@@ -655,9 +355,11 @@ int32 CFE_EVS_ReportHousekeepingCmd(const CFE_MSG_CommandHeader_t *data)
     {
         if (EVS_AppDataIsUsed(AppDataPtr))
         {
-            AppTlmDataPtr->AppID                 = EVS_AppDataGetID(AppDataPtr);
-            AppTlmDataPtr->AppEnableStatus       = AppDataPtr->ActiveFlag;
-            AppTlmDataPtr->AppMessageSentCounter = AppDataPtr->EventCount;
+            AppTlmDataPtr->AppID                      = EVS_AppDataGetID(AppDataPtr);
+            AppTlmDataPtr->AppEnableStatus            = AppDataPtr->ActiveFlag;
+            AppTlmDataPtr->AppMessageSentCounter      = AppDataPtr->EventCount;
+            AppTlmDataPtr->AppMessageSquelchedCounter = AppDataPtr->SquelchedCount;
+
             ++j;
             ++AppTlmDataPtr;
         }
@@ -667,21 +369,20 @@ int32 CFE_EVS_ReportHousekeepingCmd(const CFE_MSG_CommandHeader_t *data)
     /* Clear unused portion of event state data in telemetry packet */
     for (i = j; i < CFE_MISSION_ES_MAX_APPLICATIONS; i++)
     {
-        AppTlmDataPtr->AppID                 = CFE_ES_APPID_UNDEFINED;
-        AppTlmDataPtr->AppEnableStatus       = false;
-        AppTlmDataPtr->AppMessageSentCounter = 0;
+        AppTlmDataPtr->AppID                      = CFE_ES_APPID_UNDEFINED;
+        AppTlmDataPtr->AppEnableStatus            = false;
+        AppTlmDataPtr->AppMessageSentCounter      = 0;
+        AppTlmDataPtr->AppMessageSquelchedCounter = 0;
     }
 
-    CFE_SB_TimeStampMsg(&CFE_EVS_Global.EVS_TlmPkt.TlmHeader.Msg);
+    CFE_SB_TimeStampMsg(CFE_MSG_PTR(CFE_EVS_Global.EVS_TlmPkt.TelemetryHeader));
 
-    CFE_SB_TransmitMsg(&CFE_EVS_Global.EVS_TlmPkt.TlmHeader.Msg, true);
+    CFE_SB_TransmitMsg(CFE_MSG_PTR(CFE_EVS_Global.EVS_TlmPkt.TelemetryHeader), true);
 
     return CFE_STATUS_NO_COUNTER_INCREMENT;
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_ResetCountersCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -706,8 +407,6 @@ int32 CFE_EVS_ResetCountersCmd(const CFE_EVS_ResetCountersCmd_t *data)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_SetFilterCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -772,8 +471,6 @@ int32 CFE_EVS_SetFilterCmd(const CFE_EVS_SetFilterCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_EnablePortsCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -793,24 +490,8 @@ int32 CFE_EVS_EnablePortsCmd(const CFE_EVS_EnablePortsCmd_t *data)
     }
     else
     {
-
         /* Process command data */
-        if (((CmdPtr->BitMask & CFE_EVS_PORT1_BIT) >> 0) == true)
-        {
-            CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort |= CFE_EVS_PORT1_BIT;
-        }
-        if (((CmdPtr->BitMask & CFE_EVS_PORT2_BIT) >> 1) == true)
-        {
-            CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort |= CFE_EVS_PORT2_BIT;
-        }
-        if (((CmdPtr->BitMask & CFE_EVS_PORT3_BIT) >> 2) == true)
-        {
-            CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort |= CFE_EVS_PORT3_BIT;
-        }
-        if (((CmdPtr->BitMask & CFE_EVS_PORT4_BIT) >> 3) == true)
-        {
-            CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort |= CFE_EVS_PORT4_BIT;
-        }
+        CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort |= CmdPtr->BitMask;
 
         EVS_SendEvent(CFE_EVS_ENAPORT_EID, CFE_EVS_EventType_DEBUG,
                       "Enable Ports Command Received with Port Bit Mask = 0x%02x", (unsigned int)CmdPtr->BitMask);
@@ -821,8 +502,6 @@ int32 CFE_EVS_EnablePortsCmd(const CFE_EVS_EnablePortsCmd_t *data)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_DisablePortsCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -843,24 +522,8 @@ int32 CFE_EVS_DisablePortsCmd(const CFE_EVS_DisablePortsCmd_t *data)
     }
     else
     {
-
         /* Process command data */
-        if (((CmdPtr->BitMask & CFE_EVS_PORT1_BIT) >> 0) == true)
-        {
-            CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort &= ~CFE_EVS_PORT1_BIT;
-        }
-        if (((CmdPtr->BitMask & CFE_EVS_PORT2_BIT) >> 1) == true)
-        {
-            CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort &= ~CFE_EVS_PORT2_BIT;
-        }
-        if (((CmdPtr->BitMask & CFE_EVS_PORT3_BIT) >> 2) == true)
-        {
-            CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort &= ~CFE_EVS_PORT3_BIT;
-        }
-        if (((CmdPtr->BitMask & CFE_EVS_PORT4_BIT) >> 3) == true)
-        {
-            CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort &= ~CFE_EVS_PORT4_BIT;
-        }
+        CFE_EVS_Global.EVS_TlmPkt.Payload.OutputPort &= ~CmdPtr->BitMask;
 
         EVS_SendEvent(CFE_EVS_DISPORT_EID, CFE_EVS_EventType_DEBUG,
                       "Disable Ports Command Received with Port Bit Mask = 0x%02x", (unsigned int)CmdPtr->BitMask);
@@ -872,8 +535,6 @@ int32 CFE_EVS_DisablePortsCmd(const CFE_EVS_DisablePortsCmd_t *data)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_EnableEventTypeCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -918,8 +579,6 @@ int32 CFE_EVS_EnableEventTypeCmd(const CFE_EVS_EnableEventTypeCmd_t *data)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_DisableEventTypeCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -966,8 +625,6 @@ int32 CFE_EVS_DisableEventTypeCmd(const CFE_EVS_DisableEventTypeCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_SetEventFormatModeCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -998,8 +655,6 @@ int32 CFE_EVS_SetEventFormatModeCmd(const CFE_EVS_SetEventFormatModeCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_EnableAppEventTypeCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -1019,7 +674,6 @@ int32 CFE_EVS_EnableAppEventTypeCmd(const CFE_EVS_EnableAppEventTypeCmd_t *data)
 
     if (Status == CFE_SUCCESS)
     {
-
         /* Need to check for an out of range bitmask, since our bit masks are only 4 bits */
         if (CmdPtr->BitMask == 0x0 || CmdPtr->BitMask > 0x0F)
         {
@@ -1063,8 +717,6 @@ int32 CFE_EVS_EnableAppEventTypeCmd(const CFE_EVS_EnableAppEventTypeCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_DisableAppEventTypeCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -1084,7 +736,6 @@ int32 CFE_EVS_DisableAppEventTypeCmd(const CFE_EVS_DisableAppEventTypeCmd_t *dat
 
     if (Status == CFE_SUCCESS)
     {
-
         /* Need to check for an out of range bitmask, since our bit masks are only 4 bits */
         if (CmdPtr->BitMask == 0x0 || CmdPtr->BitMask > 0x0F)
         {
@@ -1127,8 +778,6 @@ int32 CFE_EVS_DisableAppEventTypeCmd(const CFE_EVS_DisableAppEventTypeCmd_t *dat
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_EnableAppEventsCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -1177,8 +826,6 @@ int32 CFE_EVS_EnableAppEventsCmd(const CFE_EVS_EnableAppEventsCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_DisableAppEventsCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -1226,8 +873,6 @@ int32 CFE_EVS_DisableAppEventsCmd(const CFE_EVS_DisableAppEventsCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_ResetAppCounterCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -1247,7 +892,8 @@ int32 CFE_EVS_ResetAppCounterCmd(const CFE_EVS_ResetAppCounterCmd_t *data)
 
     if (Status == CFE_SUCCESS)
     {
-        AppDataPtr->EventCount = 0;
+        AppDataPtr->EventCount     = 0;
+        AppDataPtr->SquelchedCount = 0;
 
         EVS_SendEvent(CFE_EVS_RSTEVTCNT_EID, CFE_EVS_EventType_DEBUG,
                       "Reset Event Counter Command Received with AppName = %s", LocalName);
@@ -1274,8 +920,6 @@ int32 CFE_EVS_ResetAppCounterCmd(const CFE_EVS_ResetAppCounterCmd_t *data)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_ResetFilterCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -1339,8 +983,6 @@ int32 CFE_EVS_ResetFilterCmd(const CFE_EVS_ResetFilterCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_ResetAllFiltersCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -1391,8 +1033,6 @@ int32 CFE_EVS_ResetAllFiltersCmd(const CFE_EVS_ResetAllFiltersCmd_t *data)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_AddEventFilterCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -1476,8 +1116,6 @@ int32 CFE_EVS_AddEventFilterCmd(const CFE_EVS_AddEventFilterCmd_t *data)
 
 /*----------------------------------------------------------------
  *
- * Function: CFE_EVS_DeleteEventFilterCmd
- *
  * Application-scope internal function
  * See description in header file for argument/return detail
  *
@@ -1541,8 +1179,6 @@ int32 CFE_EVS_DeleteEventFilterCmd(const CFE_EVS_DeleteEventFilterCmd_t *data)
 }
 
 /*----------------------------------------------------------------
- *
- * Function: CFE_EVS_WriteAppDataFileCmd
  *
  * Application-scope internal function
  * See description in header file for argument/return detail
@@ -1616,6 +1252,7 @@ int32 CFE_EVS_WriteAppDataFileCmd(const CFE_EVS_WriteAppDataFileCmd_t *data)
                     AppDataFile.ActiveFlag           = AppDataPtr->ActiveFlag;
                     AppDataFile.EventCount           = AppDataPtr->EventCount;
                     AppDataFile.EventTypesActiveFlag = AppDataPtr->EventTypesActiveFlag;
+                    AppDataFile.SquelchedCount       = AppDataPtr->SquelchedCount;
 
                     /* Copy application filter data to application file data record */
                     memcpy(AppDataFile.Filters, AppDataPtr->BinFilters,
@@ -1652,5 +1289,5 @@ int32 CFE_EVS_WriteAppDataFileCmd(const CFE_EVS_WriteAppDataFileCmd_t *data)
         OS_close(FileHandle);
     }
 
-    return (Result);
+    return Result;
 }

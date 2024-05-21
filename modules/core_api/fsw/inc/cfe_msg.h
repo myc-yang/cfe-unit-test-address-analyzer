@@ -1,22 +1,20 @@
-/*
-**  GSC-18128-1, "Core Flight Executive Version 6.7"
-**
-**  Copyright (c) 2006-2019 United States Government as represented by
-**  the Administrator of the National Aeronautics and Space Administration.
-**  All Rights Reserved.
-**
-**  Licensed under the Apache License, Version 2.0 (the "License");
-**  you may not use this file except in compliance with the License.
-**  You may obtain a copy of the License at
-**
-**    http://www.apache.org/licenses/LICENSE-2.0
-**
-**  Unless required by applicable law or agreed to in writing, software
-**  distributed under the License is distributed on an "AS IS" BASIS,
-**  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-**  See the License for the specific language governing permissions and
-**  limitations under the License.
-*/
+/************************************************************************
+ * NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
+ *
+ * Copyright (c) 2020 United States Government as represented by the
+ * Administrator of the National Aeronautics and Space Administration.
+ * All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ************************************************************************/
 
 /**
  * @file
@@ -61,6 +59,31 @@
  * \retval #CFE_MSG_BAD_ARGUMENT    \copybrief CFE_MSG_BAD_ARGUMENT
  */
 CFE_Status_t CFE_MSG_Init(CFE_MSG_Message_t *MsgPtr, CFE_SB_MsgId_t MsgId, CFE_MSG_Size_t Size);
+
+/*****************************************************************************/
+/**
+ * \brief Set/compute all dynamically-updated headers on a message
+ *
+ * \par Description
+ *          This routine updates all dynamic header fields on a message, and is typically
+ *          invoked via SB just prior to broadcasting the message.  Dynamic headers include
+ *          are values that should be computed/updated per message, including:
+ *                  - the sequence number
+ *                  - the timestamp, if present
+ *                  - any error control or checksum fields, if present
+ *
+ *          The MSG module implementation determines which header fields meet this criteria
+ *          and how they should be computed.
+ *
+ * \param[inout] MsgPtr  A pointer to the buffer that contains the message @nonnull.
+ * \param[in]    SeqCnt  The current sequence number from the message route
+ *
+ * \return Execution status, see \ref CFEReturnCodes
+ * \retval #CFE_SUCCESS             \copybrief CFE_SUCCESS
+ * \retval #CFE_MSG_BAD_ARGUMENT    \copybrief CFE_MSG_BAD_ARGUMENT
+ */
+CFE_Status_t CFE_MSG_UpdateHeader(CFE_MSG_Message_t *MsgPtr, CFE_MSG_SequenceCount_t SeqCnt);
+
 /**\}*/
 
 /** \defgroup CFEAPIMSGHeaderPri cFE Message Primary Header APIs
@@ -699,6 +722,32 @@ CFE_Status_t CFE_MSG_SetMsgId(CFE_MSG_Message_t *MsgPtr, CFE_SB_MsgId_t MsgId);
  * \retval #CFE_MSG_BAD_ARGUMENT   \copybrief CFE_MSG_BAD_ARGUMENT
  */
 CFE_Status_t CFE_MSG_GetTypeFromMsgId(CFE_SB_MsgId_t MsgId, CFE_MSG_Type_t *Type);
+
+/**\}*/
+
+/** \defgroup CFEAPIMSGMsgVerify cFE Message Checking APIs
+ * \{
+ */
+/*****************************************************************************/
+/**
+ * \brief Checks message headers against expected values
+ *
+ * \par Description
+ *        This routine validates that any error-control field(s) in the message header
+ *        matches the expected value.
+ *
+ *        The specific function of this API is entirely dependent on the header fields
+ *        and may be a no-op if no error checking is implemented.  In that case, it
+ *        will always output "true".
+ *
+ * \param[in]  MsgPtr        Message Pointer @nonnull
+ * \param[out] VerifyStatus  Output variable to be set to verification result @nonnull
+ *
+ * \return Execution status, see \ref CFEReturnCodes
+ * \retval #CFE_SUCCESS            \copybrief CFE_SUCCESS
+ * \retval #CFE_MSG_BAD_ARGUMENT   \copybrief CFE_MSG_BAD_ARGUMENT
+ */
+CFE_Status_t CFE_MSG_Verify(const CFE_MSG_Message_t *MsgPtr, bool *VerifyStatus);
 
 /**\}*/
 

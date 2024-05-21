@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    GSC-18128-1, "Core Flight Executive Version 6.7"
+   NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
 
-    Copyright (c) 2006-2019 United States Government as represented by
-    the Administrator of the National Aeronautics and Space Administration.
-    All Rights Reserved.
+   Copyright (c) 2020 United States Government as represented by the
+   Administrator of the National Aeronautics and Space Administration.
+   All Rights Reserved.
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License"); you may
+   not use this file except in compliance with the License. You may obtain
+   a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
-      http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
     This document adheres to the Electronic Data Sheet (EDS) XML schema
     as prescribed in CCSDS book 876.0.
@@ -100,6 +98,7 @@
         </LongDescription>
         <EntryList>
           <Entry name="LogMode" type="LogMode" shortDescription="Mode to use in the command" />
+          <PaddingEntry sizeInBits="8" shortDescription="Spare bytes for alignment"/>
         </EntryList>
       </ContainerDataType>
 
@@ -109,6 +108,7 @@
         </LongDescription>
         <EntryList>
           <Entry name="MsgFormat" type="MsgFormat" shortDescription="Format to use in the command" />
+          <PaddingEntry sizeInBits="8" shortDescription="Spare bytes for alignment"/>
         </EntryList>
       </ContainerDataType>
 
@@ -119,6 +119,7 @@
         </LongDescription>
         <EntryList>
           <Entry name="BitMask" type="BASE_TYPES/uint8" shortDescription="BitMask to use in the command" />
+          <PaddingEntry sizeInBits="8" shortDescription="Spare bytes for alignment"/>
         </EntryList>
       </ContainerDataType>
 
@@ -149,6 +150,7 @@
         <EntryList>
           <Entry name="AppName" type="BASE_TYPES/ApiName" shortDescription="Application name to use in the command" />
           <Entry name="BitMask" type="BASE_TYPES/uint8" shortDescription="BitMask to use in the command" />
+          <PaddingEntry sizeInBits="8" shortDescription="Spare bytes for alignment"/>
         </EntryList>
       </ContainerDataType>
 
@@ -166,7 +168,7 @@
 
       <ContainerDataType name="AppTlmData">
         <EntryList>
-          <Entry name="AppID" type="BASE_TYPES/uint32" shortDescription="Numerical application identifier">
+          <Entry name="AppID" type="CFE_ES/AppId" shortDescription="Numerical application identifier">
             <LongDescription>
               \cfetlmmnemonic  \EVS_APPID
             </LongDescription>
@@ -179,6 +181,11 @@
           <Entry name="AppEnableStatus" type="BASE_TYPES/uint8" shortDescription="Application event service enable status">
             <LongDescription>
               \cfetlmmnemonic  \EVS_APPENASTAT
+            </LongDescription>
+          </Entry>
+          <Entry name="AppMessageSquelchedCounter" type="BASE_TYPES/uint8" shortDescription="Application event squelch count">
+            <LongDescription>
+              \cfetlmmnemonic  \EVS_SQUELCHEDC
             </LongDescription>
           </Entry>
         </EntryList>
@@ -247,6 +254,7 @@
               \cfetlmmnemonic  \EVS_LOGENABLED
             </LongDescription>
           </Entry>
+          <PaddingEntry sizeInBits="24" shortDescription="Spare bytes for alignment"/>
           <Entry name="AppData" type="AppTlmData_x_CFE_ES_MAX_APPLICATIONS">
             <LongDescription>
               \cfetlmmnemonic  \EVS_APP
@@ -302,28 +310,30 @@
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="CommandBase" baseType="CCSDS/CommandPacket" shortDescription="Base type for all Event Services commands">
+      <ContainerDataType name="CommandBase" baseType="CFE_HDR/CommandHeader" shortDescription="Base type for all Event Services commands">
       </ContainerDataType>
 
-      <ContainerDataType name="HousekeepingTlm" baseType="CCSDS/TelemetryPacket" shortDescription="Event Services Housekeeping Telemetry">
+      <ContainerDataType name="SendHkCmd" baseType="CFE_HDR/CommandHeader" shortDescription="Send Housekeeping Command" />
+
+      <ContainerDataType name="HousekeepingTlm" baseType="CFE_HDR/TelemetryHeader" shortDescription="Event Services Housekeeping Telemetry">
         <EntryList>
           <Entry type="HousekeepingTlm_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="LongEventTlm" baseType="CCSDS/TelemetryPacket" shortDescription="Event Services Event Message">
+      <ContainerDataType name="LongEventTlm" baseType="CFE_HDR/TelemetryHeader" shortDescription="Event Services Event Message">
         <EntryList>
           <Entry type="LongEventTlm_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="ShortEventTlm" baseType="CCSDS/TelemetryPacket" shortDescription="Event Services Event Message">
+      <ContainerDataType name="ShortEventTlm" baseType="CFE_HDR/TelemetryHeader" shortDescription="Event Services Event Message">
         <EntryList>
           <Entry type="ShortEventTlm_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="Noop" baseType="CommandBase">
+      <ContainerDataType name="NoopCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Event Services No-Op
 
@@ -351,11 +361,11 @@
           None
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="0" />
+          <ValueConstraint entry="Sec.FunctionCode" value="0" />
         </ConstraintSet>
       </ContainerDataType>
 
-      <ContainerDataType name="ResetCounters" baseType="CommandBase">
+      <ContainerDataType name="ResetCountersCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Event Services Reset Counters
 
@@ -392,11 +402,11 @@
           \sa  #CFE_EVS_RESET_APP_COUNTER_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="1" />
+          <ValueConstraint entry="Sec.FunctionCode" value="1" />
         </ConstraintSet>
       </ContainerDataType>
 
-      <ContainerDataType name="EnableEventType" baseType="CommandBase">
+      <ContainerDataType name="EnableEventTypeCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Enable Event Type
 
@@ -442,14 +452,14 @@
           #CFE_EVS_DISABLE_APP_EVENT_TYPE_CC, #CFE_EVS_ENABLE_APP_EVENTS_CC, #CFE_EVS_DISABLE_APP_EVENTS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="2" />
+          <ValueConstraint entry="Sec.FunctionCode" value="2" />
         </ConstraintSet>
         <EntryList>
           <Entry type="BitMaskCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="DisableEventType" baseType="CommandBase">
+      <ContainerDataType name="DisableEventTypeCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Disable Event Type
 
@@ -496,14 +506,14 @@
           #CFE_EVS_DISABLE_APP_EVENT_TYPE_CC, #CFE_EVS_ENABLE_APP_EVENTS_CC, #CFE_EVS_DISABLE_APP_EVENTS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="3" />
+          <ValueConstraint entry="Sec.FunctionCode" value="3" />
         </ConstraintSet>
         <EntryList>
           <Entry type="BitMaskCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="SetEventFormatMode" baseType="CommandBase">
+      <ContainerDataType name="SetEventFormatModeCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Set Event Format Mode
 
@@ -549,14 +559,14 @@
           \sa
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="4" />
+          <ValueConstraint entry="Sec.FunctionCode" value="4" />
         </ConstraintSet>
         <EntryList>
           <Entry type="SetEventFormatMode_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="EnableAppEventType" baseType="CommandBase">
+      <ContainerDataType name="EnableAppEventTypeCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Enable Application Event Type
 
@@ -606,14 +616,14 @@
           #CFE_EVS_DISABLE_APP_EVENT_TYPE_CC, #CFE_EVS_ENABLE_APP_EVENTS_CC, #CFE_EVS_DISABLE_APP_EVENTS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="5" />
+          <ValueConstraint entry="Sec.FunctionCode" value="5" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameBitMaskCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="DisableAppEventType" baseType="CommandBase">
+      <ContainerDataType name="DisableAppEventTypeCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Disable Application Event Type
 
@@ -663,14 +673,14 @@
           #CFE_EVS_ENABLE_APP_EVENTS_CC, #CFE_EVS_DISABLE_APP_EVENTS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="6" />
+          <ValueConstraint entry="Sec.FunctionCode" value="6" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameBitMaskCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="EnableAppEvents" baseType="CommandBase">
+      <ContainerDataType name="EnableAppEventsCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Enable Event Services for an Application
 
@@ -710,14 +720,14 @@
           #CFE_EVS_DISABLE_APP_EVENT_TYPE_CC, #CFE_EVS_DISABLE_APP_EVENTS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="7" />
+          <ValueConstraint entry="Sec.FunctionCode" value="7" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="DisableAppEvents" baseType="CommandBase">
+      <ContainerDataType name="DisableAppEventsCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Disable Event Services for an Application
 
@@ -757,14 +767,14 @@
           #CFE_EVS_DISABLE_APP_EVENT_TYPE_CC, #CFE_EVS_ENABLE_APP_EVENTS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="8" />
+          <ValueConstraint entry="Sec.FunctionCode" value="8" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="ResetAppCounter" baseType="CommandBase">
+      <ContainerDataType name="ResetAppCounterCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Reset Application Event Counters
 
@@ -800,14 +810,14 @@
           \sa  #CFE_EVS_RESET_COUNTERS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="9" />
+          <ValueConstraint entry="Sec.FunctionCode" value="9" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="SetFilter" baseType="CommandBase">
+      <ContainerDataType name="SetFilterCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Set Application Event Filter
 
@@ -847,14 +857,14 @@
           \sa  #CFE_EVS_RESET_FILTER_CC, #CFE_EVS_RESET_ALL_FILTERS_CC, #CFE_EVS_ADD_EVENT_FILTER_CC, #CFE_EVS_DELETE_EVENT_FILTER_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="10" />
+          <ValueConstraint entry="Sec.FunctionCode" value="10" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameEventIDMaskCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="EnablePorts" baseType="CommandBase">
+      <ContainerDataType name="EnablePortsCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Enable Event Services Output Ports
 
@@ -892,14 +902,14 @@
           \sa  #CFE_EVS_DISABLE_PORTS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="11" />
+          <ValueConstraint entry="Sec.FunctionCode" value="11" />
         </ConstraintSet>
         <EntryList>
           <Entry type="BitMaskCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="DisablePorts" baseType="CommandBase">
+      <ContainerDataType name="DisablePortsCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Disable Event Services Output Ports
 
@@ -938,14 +948,14 @@
           \sa  #CFE_EVS_ENABLE_PORTS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="12" />
+          <ValueConstraint entry="Sec.FunctionCode" value="12" />
         </ConstraintSet>
         <EntryList>
           <Entry type="BitMaskCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="ResetFilter" baseType="CommandBase">
+      <ContainerDataType name="ResetFilterCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Reset an Event Filter for an Application
 
@@ -979,14 +989,14 @@
           \sa  #CFE_EVS_SET_FILTER_CC, #CFE_EVS_RESET_ALL_FILTERS_CC, #CFE_EVS_ADD_EVENT_FILTER_CC, #CFE_EVS_DELETE_EVENT_FILTER_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="13" />
+          <ValueConstraint entry="Sec.FunctionCode" value="13" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameEventIDCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="ResetAllFilters" baseType="CommandBase">
+      <ContainerDataType name="ResetAllFiltersCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Reset All Event Filters for an Application
 
@@ -1021,14 +1031,14 @@
           \sa  #CFE_EVS_SET_FILTER_CC, #CFE_EVS_RESET_FILTER_CC, #CFE_EVS_ADD_EVENT_FILTER_CC, #CFE_EVS_DELETE_EVENT_FILTER_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="14" />
+          <ValueConstraint entry="Sec.FunctionCode" value="14" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="AddEventFilter" baseType="CommandBase">
+      <ContainerDataType name="AddEventFilterCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Add Application Event Filter
 
@@ -1063,14 +1073,14 @@
           \sa  #CFE_EVS_SET_FILTER_CC, #CFE_EVS_RESET_FILTER_CC, #CFE_EVS_RESET_ALL_FILTERS_CC, #CFE_EVS_DELETE_EVENT_FILTER_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="15" />
+          <ValueConstraint entry="Sec.FunctionCode" value="15" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameEventIDMaskCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="DeleteEventFilter" baseType="CommandBase">
+      <ContainerDataType name="DeleteEventFilterCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Delete Application Event Filter
 
@@ -1105,14 +1115,14 @@
           \sa  #CFE_EVS_SET_FILTER_CC, #CFE_EVS_RESET_FILTER_CC, #CFE_EVS_RESET_ALL_FILTERS_CC, #CFE_EVS_ADD_EVENT_FILTER_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="16" />
+          <ValueConstraint entry="Sec.FunctionCode" value="16" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppNameEventIDCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="WriteAppDataFile" baseType="CommandBase">
+      <ContainerDataType name="WriteAppDataFileCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Write Event Services Application Information to File
 
@@ -1147,14 +1157,14 @@
           \sa  #CFE_EVS_FILE_WRITE_LOG_DATA_CC, #CFE_EVS_SET_LOG_MODE_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="17" />
+          <ValueConstraint entry="Sec.FunctionCode" value="17" />
         </ConstraintSet>
         <EntryList>
           <Entry type="AppDataCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="WriteLogDataFile" baseType="CommandBase">
+      <ContainerDataType name="WriteLogDataFileCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Write Event Log to File
 
@@ -1187,14 +1197,14 @@
           \sa  #CFE_EVS_FILE_WRITE_APP_DATA_CC, #CFE_EVS_SET_LOG_MODE_CC, #CFE_EVS_CLEAR_LOG_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="18" />
+          <ValueConstraint entry="Sec.FunctionCode" value="18" />
         </ConstraintSet>
         <EntryList>
           <Entry type="LogFileCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="SetLogMode" baseType="CommandBase">
+      <ContainerDataType name="SetLogModeCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Set Logging Mode
 
@@ -1229,14 +1239,14 @@
           \sa  #CFE_EVS_FILE_WRITE_LOG_DATA_CC, #CFE_EVS_CLEAR_LOG_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="19" />
+          <ValueConstraint entry="Sec.FunctionCode" value="19" />
         </ConstraintSet>
         <EntryList>
           <Entry type="SetLogMode_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="ClearLog" baseType="CommandBase">
+      <ContainerDataType name="ClearLogCmd" baseType="CommandBase">
         <LongDescription>
           \cfeevscmd  Clear Event Log
 
@@ -1270,7 +1280,7 @@
           \sa  #CFE_EVS_FILE_WRITE_LOG_DATA_CC, #CFE_EVS_SET_LOG_MODE_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="20" />
+          <ValueConstraint entry="Sec.FunctionCode" value="20" />
         </ConstraintSet>
       </ContainerDataType>
 
@@ -1288,7 +1298,7 @@
           <Interface name="SEND_HK" shortDescription="Send telemetry command interface" type="CFE_SB/Telecommand">
             <!-- This uses a bare spacepacket with no payload -->
             <GenericTypeMapSet>
-              <GenericTypeMap name="TelecommandDataType" type="CCSDS/CommandPacket" />
+              <GenericTypeMap name="TelecommandDataType" type="SendHkCmd" />
             </GenericTypeMapSet>
           </Interface>
           <Interface name="HK_TLM" shortDescription="Software bus housekeeping telemetry interface" type="CFE_SB/Telemetry">

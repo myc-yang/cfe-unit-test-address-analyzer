@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    GSC-18128-1, "Core Flight Executive Version 6.7"
+   NASA Docket No. GSC-18,719-1, and identified as “core Flight System: Bootes”
 
-    Copyright (c) 2006-2019 United States Government as represented by
-    the Administrator of the National Aeronautics and Space Administration.
-    All Rights Reserved.
+   Copyright (c) 2020 United States Government as represented by the
+   Administrator of the National Aeronautics and Space Administration.
+   All Rights Reserved.
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+   Licensed under the Apache License, Version 2.0 (the "License"); you may
+   not use this file except in compliance with the License. You may obtain
+   a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 
-      http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 
     This document adheres to the Electronic Data Sheet (EDS) XML schema
     as prescribed in CCSDS book 876.0.
@@ -44,6 +42,7 @@
           <Enumeration label="ADDTCL" value="8" shortDescription="Time Client Latency is applied in a positive direction" />
           <Enumeration label="SERVER" value="9" shortDescription="This instance of Time Services is a Time Server" />
           <Enumeration label="GDTONE" value="10" shortDescription="The tone received is good compared to the last tone received" />
+          <Enumeration label="REFERR" value="11" shortDescription="GetReference read error, will be set if unable to get a consistent ref value" />
         </EnumerationList>
       </EnumeratedDataType>
 
@@ -88,7 +87,7 @@
       </EnumeratedDataType>
 
       <EnumeratedDataType name="SourceSelect" shortDescription="Clock Source Selection Parameters">
-        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+        <IntegerDataEncoding sizeInBits="16" encoding="unsigned" />
         <EnumerationList>
           <Enumeration label="INTERNAL" value="1" shortDescription="Use Internal Source" />
           <Enumeration label="EXTERNAL" value="2" shortDescription="Use External Source"  />
@@ -104,7 +103,7 @@
       </EnumeratedDataType>
 
       <EnumeratedDataType name="AdjustDirection" shortDescription="STCF adjustment direction (for both one-time and 1Hz adjustments)">
-        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+        <IntegerDataEncoding sizeInBits="16" encoding="unsigned" />
         <EnumerationList>
           <Enumeration label="ADD" value="1" shortDescription="Add time adjustment" />
           <Enumeration label="SUBTRACT" value="2" shortDescription="Subtract time adjustment" />
@@ -112,7 +111,7 @@
       </EnumeratedDataType>
 
       <EnumeratedDataType name="FlywheelState" shortDescription="Fly-wheel status values" >
-        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+        <IntegerDataEncoding sizeInBits="16" encoding="unsigned" />
         <EnumerationList>
           <Enumeration label="NO_FLY" value="0" shortDescription="Not in flywheel state" />
           <Enumeration label="IS_FLY" value="1" shortDescription="In flywheel state" />
@@ -120,7 +119,7 @@
       </EnumeratedDataType>
 
       <EnumeratedDataType name="SetState" shortDescription="Clock status values (has the clock been set to correct time)">
-        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+        <IntegerDataEncoding sizeInBits="16" encoding="unsigned" />
         <EnumerationList>
           <Enumeration label="NOT_SET" value="0" shortDescription="Spacecraft time has not been set" />
           <Enumeration label="WAS_SET" value="1" shortDescription="Spacecraft time has been set"  />
@@ -175,7 +174,8 @@
 
       <ContainerDataType name="OneHzAdjustmentCmd_Payload">
         <EntryList>
-          <Entry name="Amount" type="SysTime" />
+          <Entry name="Seconds" type="BASE_TYPES/uint32" />
+          <Entry name="Subseconds" type="BASE_TYPES/uint32" />
         </EntryList>
       </ContainerDataType>
 
@@ -184,7 +184,7 @@
           <Entry name="AtToneMET" type="SysTime" shortDescription="MET at time of tone" />
           <Entry name="AtToneSTCF" type="SysTime" shortDescription="STCF at time of tone" />
           <Entry name="AtToneLeapSeconds" type="BASE_TYPES/int16" shortDescription="Leap Seconds at time of tone" />
-          <Entry name="AtToneState" type="BASE_TYPES/int16" shortDescription="Clock state at time of tone" />
+          <Entry name="AtToneState" type="ClockState" shortDescription="Clock state at time of tone" />
         </EntryList>
       </ContainerDataType>
 
@@ -238,7 +238,7 @@
               \cfetlmmnemonic  \TIME_STCFSUBSECS
             </LongDescription>
           </Entry>
-          <Entry name="AdjustmentDelay" type="SysTime" shortDescription="Time Delay (client) or 1Hz Adjustment (server)" />
+          <Entry name="AdjustmentFactor" type="SysTime" shortDescription="Time Delay (client) or 1Hz Adjustment (server)" />
         </EntryList>
       </ContainerDataType>
 
@@ -272,7 +272,7 @@
               \cfetlmmnemonic  \TIME_LEAPS
             </LongDescription>
           </Entry>
-          <Entry name="ClockStateAPI" type="BASE_TYPES/int16">
+          <Entry name="ClockStateAPI" type="ClockState">
             <LongDescription>
               \cfetlmmnemonic  \TIME_APISTATE
             </LongDescription>
@@ -460,10 +460,25 @@
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="CommandBase" baseType="CCSDS/CommandPacket">
+      <ContainerDataType name="1HzCmd" baseType="CFE_HDR/CommandHeader">
       </ContainerDataType>
 
-      <ContainerDataType name="Noop" baseType="CommandBase">
+      <ContainerDataType name="FakeToneCmd" baseType="CFE_HDR/CommandHeader">
+      </ContainerDataType>
+
+      <ContainerDataType name="ToneSignalCmd" baseType="CFE_HDR/CommandHeader">
+        <EntryList>
+          <Entry type="SignalCmd_Payload" name="Payload" />
+        </EntryList>
+      </ContainerDataType>
+
+
+      <ContainerDataType name="CommandBase" baseType="CFE_HDR/CommandHeader">
+      </ContainerDataType>
+
+      <ContainerDataType name="SendHkCmd" baseType="CFE_HDR/CommandHeader" shortDescription="Send Housekeeping Command" />
+
+      <ContainerDataType name="NoopCmd" baseType="CommandBase">
         <LongDescription>
           \cfetimecmd  Time No-Op
 
@@ -492,11 +507,11 @@
           None
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="0" />
+          <ValueConstraint entry="Sec.FunctionCode" value="0" />
         </ConstraintSet>
       </ContainerDataType>
 
-      <ContainerDataType name="ResetCounters" baseType="CommandBase">
+      <ContainerDataType name="ResetCountersCmd" baseType="CommandBase">
         <LongDescription>
           \cfetimecmd  Time Reset Counters
 
@@ -538,11 +553,11 @@
           None
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="1" />
+          <ValueConstraint entry="Sec.FunctionCode" value="1" />
         </ConstraintSet>
       </ContainerDataType>
 
-      <ContainerDataType name="SendDiagnosticTlm" baseType="CommandBase">
+      <ContainerDataType name="SendDiagnosticCmd" baseType="CommandBase">
         <LongDescription>
           \cfetimecmd  Request TIME Diagnostic Telemetry
 
@@ -575,7 +590,7 @@
           \sa
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="2" />
+          <ValueConstraint entry="Sec.FunctionCode" value="2" />
         </ConstraintSet>
       </ContainerDataType>
 
@@ -632,7 +647,7 @@
           \sa  #CFE_TIME_SET_STATE_CC, #CFE_TIME_SET_SIGNAL_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="3" />
+          <ValueConstraint entry="Sec.FunctionCode" value="3" />
         </ConstraintSet>
         <EntryList>
           <Entry type="SourceCmd_Payload" name="Payload" />
@@ -699,7 +714,7 @@
           \sa  #CFE_TIME_SET_SOURCE_CC, #CFE_TIME_SET_SIGNAL_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="4" />
+          <ValueConstraint entry="Sec.FunctionCode" value="4" />
         </ConstraintSet>
         <EntryList>
           <Entry type="StateCmd_Payload" name="Payload" />
@@ -745,7 +760,7 @@
           \sa  #CFE_TIME_SUB_DELAY_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="5" />
+          <ValueConstraint entry="Sec.FunctionCode" value="5" />
         </ConstraintSet>
         <EntryList>
           <Entry type="TimeCmd_Payload" name="Payload" />
@@ -792,7 +807,7 @@
           \sa  #CFE_TIME_ADD_DELAY_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="6" />
+          <ValueConstraint entry="Sec.FunctionCode" value="6" />
         </ConstraintSet>
         <EntryList>
           <Entry type="TimeCmd_Payload" name="Payload" />
@@ -847,7 +862,7 @@
           \sa  #CFE_TIME_SET_MET_CC, #CFE_TIME_SET_STCF_CC, #CFE_TIME_SET_LEAPS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="7" />
+          <ValueConstraint entry="Sec.FunctionCode" value="7" />
         </ConstraintSet>
         <EntryList>
           <Entry type="TimeCmd_Payload" name="Payload" />
@@ -898,7 +913,7 @@
           \sa  #CFE_TIME_SET_TIME_CC, #CFE_TIME_SET_STCF_CC, #CFE_TIME_SET_LEAPS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="8" />
+          <ValueConstraint entry="Sec.FunctionCode" value="8" />
         </ConstraintSet>
         <EntryList>
           <Entry type="TimeCmd_Payload" name="Payload" />
@@ -943,7 +958,7 @@
           \sa  #CFE_TIME_SET_TIME_CC, #CFE_TIME_SET_MET_CC, #CFE_TIME_SET_LEAPS_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="9" />
+          <ValueConstraint entry="Sec.FunctionCode" value="9" />
         </ConstraintSet>
         <EntryList>
           <Entry type="TimeCmd_Payload" name="Payload" />
@@ -986,7 +1001,7 @@
           \sa  #CFE_TIME_SET_TIME_CC, #CFE_TIME_SET_MET_CC, #CFE_TIME_SET_STCF_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="10" />
+          <ValueConstraint entry="Sec.FunctionCode" value="10" />
         </ConstraintSet>
         <EntryList>
           <Entry type="LeapsCmd_Payload" name="Payload" />
@@ -1029,7 +1044,7 @@
           \sa  #CFE_TIME_ADD_ADJUST_CC, #CFE_TIME_SUB_ADJUST_CC, #CFE_TIME_ADD_1HZADJ_CC, #CFE_TIME_SUB_1HZADJ_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="11" />
+          <ValueConstraint entry="Sec.FunctionCode" value="11" />
         </ConstraintSet>
         <EntryList>
           <Entry type="TimeCmd_Payload" name="Payload" />
@@ -1071,7 +1086,7 @@
           \sa  #CFE_TIME_ADD_ADJUST_CC, #CFE_TIME_ADD_1HZADJ_CC, #CFE_TIME_SUB_1HZADJ_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="12" />
+          <ValueConstraint entry="Sec.FunctionCode" value="12" />
         </ConstraintSet>
         <EntryList>
           <Entry type="TimeCmd_Payload" name="Payload" />
@@ -1127,7 +1142,7 @@
           \sa  #CFE_TIME_ADD_ADJUST_CC, #CFE_TIME_SUB_ADJUST_CC, #CFE_TIME_SUB_1HZADJ_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="13" />
+          <ValueConstraint entry="Sec.FunctionCode" value="13" />
         </ConstraintSet>
         <EntryList>
           <Entry type="OneHzAdjustmentCmd_Payload" name="Payload" />
@@ -1183,7 +1198,7 @@
           \sa  #CFE_TIME_ADD_ADJUST_CC, #CFE_TIME_SUB_ADJUST_CC, #CFE_TIME_ADD_1HZADJ_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="14" />
+          <ValueConstraint entry="Sec.FunctionCode" value="14" />
         </ConstraintSet>
         <EntryList>
           <Entry type="OneHzAdjustmentCmd_Payload" name="Payload" />
@@ -1234,26 +1249,26 @@
           \sa  #CFE_TIME_SET_STATE_CC, #CFE_TIME_SET_SOURCE_CC
         </LongDescription>
         <ConstraintSet>
-          <ValueConstraint entry="Sec.Command" value="15" />
+          <ValueConstraint entry="Sec.FunctionCode" value="15" />
         </ConstraintSet>
         <EntryList>
           <Entry type="SignalCmd_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="HousekeepingTlm" baseType="CCSDS/TelemetryPacket">
+      <ContainerDataType name="HousekeepingTlm" baseType="CFE_HDR/TelemetryHeader">
         <EntryList>
           <Entry type="HousekeepingTlm_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="DiagnosticTlm" baseType="CCSDS/TelemetryPacket">
+      <ContainerDataType name="DiagnosticTlm" baseType="CFE_HDR/TelemetryHeader">
         <EntryList>
           <Entry type="DiagnosticTlm_Payload" name="Payload" />
         </EntryList>
       </ContainerDataType>
 
-      <ContainerDataType name="ToneDataCmd" baseType="CCSDS/CommandPacket">
+      <ContainerDataType name="ToneDataCmd" baseType="CFE_HDR/CommandHeader">
         <EntryList>
           <Entry type="ToneDataCmd_Payload" name="Payload" />
         </EntryList>
@@ -1274,7 +1289,7 @@
           <Interface name="SEND_HK" shortDescription="Send telemetry command interface" type="CFE_SB/Telecommand">
             <!-- This uses a bare spacepacket with no payload -->
             <GenericTypeMapSet>
-              <GenericTypeMap name="TelecommandDataType" type="CCSDS/CommandPacket" />
+              <GenericTypeMap name="TelecommandDataType" type="SendHkCmd" />
             </GenericTypeMapSet>
           </Interface>
           <Interface name="HK_TLM" shortDescription="Software bus housekeeping telemetry interface" type="CFE_SB/Telemetry">
@@ -1285,12 +1300,12 @@
           </Interface>
           <Interface name="TONE_CMD" type="CFE_SB/Telecommand">
             <GenericTypeMapSet>
-              <GenericTypeMap name="TelecommandDataType" type="CCSDS/CommandPacket" />
+              <GenericTypeMap name="TelecommandDataType" type="ToneSignalCmd" />
             </GenericTypeMapSet>
           </Interface>
           <Interface name="ONEHZ_CMD" type="CFE_SB/Telecommand">
             <GenericTypeMapSet>
-              <GenericTypeMap name="TelecommandDataType" type="CCSDS/CommandPacket" />
+              <GenericTypeMap name="TelecommandDataType" type="1HzCmd" />
             </GenericTypeMapSet>
           </Interface>
           <Interface name="DATA_CMD" type="CFE_SB/Telecommand">
@@ -1300,7 +1315,7 @@
           </Interface>
           <Interface name="SEND_CMD" type="CFE_SB/Telecommand">
             <GenericTypeMapSet>
-              <GenericTypeMap name="TelecommandDataType" type="CCSDS/CommandPacket" />
+              <GenericTypeMap name="TelecommandDataType" type="FakeToneCmd" />
             </GenericTypeMapSet>
           </Interface>
           <Interface name="DIAG_TLM" type="CFE_SB/Telemetry">
