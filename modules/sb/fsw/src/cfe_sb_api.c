@@ -1926,6 +1926,8 @@ CFE_Status_t CFE_SB_ReceiveBuffer(CFE_SB_Buffer_t **BufPtr, CFE_SB_PipeId_t Pipe
             {
                 --PipeDscPtr->CurrentQueueDepth;
             }
+            /* Should decrement the use count only if buffer is within bounds of allocated memory, for the ref that was in the queue */
+            CFE_SB_DecrBufUseCnt(BufDscPtr);
         }
         else
         {
@@ -1933,9 +1935,6 @@ CFE_Status_t CFE_SB_ReceiveBuffer(CFE_SB_Buffer_t **BufPtr, CFE_SB_PipeId_t Pipe
             PendingEventID = CFE_SB_BAD_PIPEID_EID;
             Status         = CFE_SB_PIPE_RD_ERR;
         }
-
-        /* Always decrement the use count, for the ref that was in the queue */
-        CFE_SB_DecrBufUseCnt(BufDscPtr);
     }
 
     /* Before unlocking, increment relevant error counter if needed */

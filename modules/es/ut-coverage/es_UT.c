@@ -4495,7 +4495,7 @@ void TestAPI(void)
 
     /* Force a vsnprintf failure */
     ES_ResetUnitTest();
-    UtAssert_VOIDCALL(ES_UT_SysLog_snprintf(SysLogBuf, sizeof(SysLogBuf), NULL));
+    UtAssert_VOIDCALL(ES_UT_SysLog_snprintf(SysLogBuf, sizeof(SysLogBuf), ""));
 
     /* Test run loop with an application error status */
     ES_ResetUnitTest();
