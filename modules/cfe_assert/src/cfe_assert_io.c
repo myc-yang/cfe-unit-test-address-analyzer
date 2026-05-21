@@ -88,7 +88,10 @@ void UT_BSP_WriteLogFile(osal_id_t FileDesc, uint8 MessageType, const char *Pref
     if (MsgEnabled & 1)
     {
         snprintf(LogFileBuffer, sizeof(LogFileBuffer), "[%5s] %s\n", Prefix, OutputMessage);
-        OS_write(FileDesc, LogFileBuffer, strlen(LogFileBuffer));
+        if (OS_write(FileDesc, LogFileBuffer, strlen(LogFileBuffer)) < OS_SUCCESS)
+        {
+            CFE_ES_WriteToSysLog("%s: OS_write() call failed\n", __func__);
+        }
     }
 }
 
